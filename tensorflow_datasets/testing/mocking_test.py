@@ -259,6 +259,7 @@ def test_mocking_rlu_nested_dataset(mock_data):
     features=tfds.features.FeaturesDict({
       'clipped_episode_return': tf.float32,
       'episode_id': tf.int64,
+      'checkpoint_id': tf.int64,
       'episode_return': tf.float32,
       'steps': tfds.features.Dataset({
           'action': tf.int64,
@@ -276,7 +277,7 @@ def test_mocking_rlu_nested_dataset(mock_data):
     mock_data: the stream of mock data points.
   """
   with mock_data(num_examples=3):
-    ds = tfds.load('rlu_atari/Pong_run_1', split='train')
+    ds = tfds.load('rlu_atari/Pong_run_1:1.1.0', split='train')
 
     steps = ds.element_spec['steps']
     assert isinstance(steps, tf.data.DatasetSpec)
