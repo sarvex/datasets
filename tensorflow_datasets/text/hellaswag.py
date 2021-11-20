@@ -68,27 +68,28 @@ class Hellaswag(tfds.core.GeneratorBasedBuilder):
         'test': os.path.join(_HELLASWAG_URL, 'hellaswag_test.jsonl'),
     })
 
-    return [
-        tfds.core.SplitGenerator(
-            name=tfds.Split.TRAIN,
-            gen_kwargs={'filepath': files['train']},
-        ),
-        tfds.core.SplitGenerator(
-            name=tfds.Split.VALIDATION,
-            gen_kwargs={'filepath': files['validation']},
-        ),
-        tfds.core.SplitGenerator(
-            name=tfds.Split.TEST,
-            gen_kwargs={'filepath': files['test']},
-        ),
-    ]
+    return {
+        'train': self._generate_examples(files['train']),
+        'validation': self._generate_examples(files['validation']),
+        'test': self._generate_examples(files['test']),
+        'validation_ind': self._generate_examples(files['validation'], 'IND'),
+        'validation_ood': self._generate_examples(files['validation'], 'OOD'),
+        'test_ind': self._generate_examples(files['test'], 'IND'),
+        'test_ood': self._generate_examples(files['test'], 'OOD')
+    }
 
-  def _generate_examples(self, filepath):
+  def _generate_examples(self, filepath, domain=None):
     """Yields examples."""
     with tf.io.gfile.GFile(filepath) as f:
       for idx, line in enumerate(f):
         elem = json.loads(line)
         elem_id = '%s_%d' % (os.path.basename(filepath), idx)
+
+        if domain == 'IND' and elem['split_type'] != 'indomain':
+          continue
+        if domain == 'OOD' and elem['split_type'] != 'zeroshot':
+          continue
+
         yield elem_id, {
             'context': elem['ctx'],
             'endings': elem['endings'],
